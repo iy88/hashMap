@@ -1,2 +1,6 @@
 out/*
 .vs/*
+CMakeFiles
+CMakeCache.txt
+cMake_install.cmake
+Makefile
