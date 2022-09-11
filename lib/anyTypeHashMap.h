@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MAP_H
+#define MAP_H
 #include <stdio.h>
 #include <stdlib.h>
 #define MAX_TABLE_LENGTH 50
@@ -26,3 +27,4 @@ int delete(hashMap map, char* key);
 int clean(hashMap map);
 
 int has(hashMap map, char* key);
+#endif
