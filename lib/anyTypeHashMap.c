@@ -1,6 +1,6 @@
 #include "anyTypeHashMap.h"
 
-int hash(char* key) {
+int hash(const char* key) {
 	int hash = 0;
 	int i = 0;
 	while (key[i] != 0) {
@@ -10,15 +10,15 @@ int hash(char* key) {
 	return hash % MAX_TABLE_LENGTH;
 }
 
-void copy(void* des, void* src, unsigned long long size) {
-	char* d = (char*)des;
-	char* s = (char*)src;
+void copy(const void* des, const void* src, unsigned long long size) {
+	char* d = des;
+	char* s = src;
 	while (size-- > 0) {
 		*d++ = *s++;
 	}
 }
 
-unsigned long long lenStr(char* s) {
+unsigned long long lenStr(const char* s) {
 	unsigned long long len = 0;
 	while (s[len] != '\0') {
 		len++;
@@ -26,7 +26,7 @@ unsigned long long lenStr(char* s) {
 	return len;
 }
 
-int isEqual(char* s1, char* s2) {
+int isEqual(const char* s1, const char* s2) {
 	int i = 0;
 	while (s1[i] != '\0') {
 		if (s1[i] != s2[i]) {
@@ -42,18 +42,19 @@ int isEqual(char* s1, char* s2) {
 	}
 }
 
-
-hashMap createHashMap() {
-	hashMap map = (hashMap)calloc(MAX_TABLE_LENGTH, sizeof(NodePtr));
+hashMapPtr createHashMap() {
+	hashMapPtr map = (hashMapPtr)malloc(sizeof(hashMap));
+	map->size = 0;
+	map->buckets = (Node**)calloc(MAX_TABLE_LENGTH, sizeof(NodePtr));
 	return map;
 }
 
-int set(hashMap map, char* key, void* value, int size) {
+int mapSet(const hashMapPtr map, const char* key, const void* value, int size) {
 	int idx = hash(key);
-	if (map[idx] == 0) {
+	if (map->buckets[idx] == 0) {
 		NodePtr node = (NodePtr)malloc(sizeof(Node));
 		if (node != NULL) {
-			node->key = (char*)malloc(lenStr(key) * sizeof(char));
+			node->key = (const char*)malloc(lenStr(key) * sizeof(char));
 			if (node->key != NULL) {
 				copy(node->key, key, (lenStr(key) + 1) * sizeof(char));
 				node->value = malloc(size);
@@ -65,7 +66,8 @@ int set(hashMap map, char* key, void* value, int size) {
 					exit(1);
 				}
 				node->next = NULL;
-				map[idx] = node;
+				map->buckets[idx] = node;
+				map->size++;
 				return 1;
 			}
 			else {
@@ -79,7 +81,7 @@ int set(hashMap map, char* key, void* value, int size) {
 		}
 	}
 	else {
-		NodePtr current = map[idx];
+		NodePtr current = map->buckets[idx];
 		if (isEqual(current->key, key) == 1) {
 			free(current->value);
 			current->value = malloc(size);
@@ -111,7 +113,7 @@ int set(hashMap map, char* key, void* value, int size) {
 		}
 		NodePtr node = (NodePtr)malloc(sizeof(Node));
 		if (node != NULL) {
-			node->key = (char*)malloc(lenStr(key) * sizeof(char));
+			node->key = (const char*)malloc(lenStr(key) * sizeof(char));
 			if (node->key != NULL) {
 				copy(node->key, key, (lenStr(key) + 1) * sizeof(char));
 				node->value = malloc(size);
@@ -140,41 +142,42 @@ int set(hashMap map, char* key, void* value, int size) {
 }
 
 
-void* get(hashMap map, char* key) {
+int mapGet(const hashMapPtr map, const char* key, const void** dst) {
 	int idx = hash(key);
-	if (map[idx] != 0) {
-		NodePtr current = map[idx];
+	if (map->buckets[idx] != 0) {
+		NodePtr current = map->buckets[idx];
 		while (isEqual(current->key, key) != 1) {
 			if (current->next == NULL) {
-				printf("the key[%s] doesn't exist\n", key);
-				exit(1);
+				return 0;
 			}
 			else {
 				current = current->next;
 			}
 		}
-		return current->value;
+		*dst = current->value;
+		return 1;
 	}
 	else {
-		printf("the key[%s] doesn't exist\n", key);
-		exit(1);
+		return 0;
 	}
 }
 
-int delete(hashMap map, char* key) {
+int mapDelete(const hashMapPtr map, const char* key) {
 	int idx = hash(key);
-	if (map[idx] != 0) {
-		NodePtr current = map[idx];
+	if (map->buckets[idx] != 0) {
+		NodePtr current = map->buckets[idx];
 		if (isEqual(current->key, key) == 1) {
 			if (current->next == NULL) {
 				free(current);
-				map[idx] = NULL;
+				map->buckets[idx] = NULL;
+				map->size--;
 				return 1;
 			}
 			else {
 				NodePtr tmp = current;
-				map[idx] = current->next;
+				map->buckets[idx] = current->next;
 				free(tmp);
+				map->size--;
 				return 1;
 			}
 		}
@@ -190,11 +193,13 @@ int delete(hashMap map, char* key) {
 			NodePtr tmp = current->next;
 			current->next = current->next->next;
 			free(tmp);
+			map->size--;
 			return 1;
 		}
 		else {
 			free(current->next);
 			current->next = NULL;
+			map->size--;
 			return 1;
 		}
 	}
@@ -203,20 +208,26 @@ int delete(hashMap map, char* key) {
 	}
 }
 
-int clean(hashMap map) {
+void mapClean(const hashMapPtr map) {
 	for (int i = 0; i < MAX_TABLE_LENGTH; i++) {
-		if (map[i] != NULL) {
-			free(map[i]);
-			map[i] = NULL;
+		if (map->buckets[i] != NULL) {
+			NodePtr current = map->buckets[i];
+			while (current->next) {
+				NodePtr tmp = current->next;
+				free(current);
+				current = tmp;
+			}
+			free(current);
+			map->buckets[i] = NULL;
 		}
 	}
-	return 1;
+	map->size = 0;
 }
 
-int has(hashMap map, char* key) {
+int mapHas(const hashMapPtr map, const char* key) {
 	int idx = hash(key);
-	if (map[idx] != NULL) {
-		NodePtr current = map[idx];
+	if (map->buckets[idx] != NULL) {
+		NodePtr current = map->buckets[idx];
 		if (isEqual(current->key, key) == 1) {
 			return 1;
 		}
@@ -235,5 +246,10 @@ int has(hashMap map, char* key) {
 	else {
 		return 0;
 	}
+}
+
+void mapDestory(const hashMapPtr map) {
+	free(map->buckets);
+	free(map);
 }
 
