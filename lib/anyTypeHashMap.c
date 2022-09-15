@@ -142,7 +142,7 @@ int mapSet(const hashMapPtr map, const char* key, const void* value, int size) {
 }
 
 
-int mapGet(const hashMapPtr map, const char* key, const void** dst) {
+int mapGet(const hashMapPtr map, const char* key, void** dst) {
 	int idx = hash(key);
 	if (map->buckets[idx] != 0) {
 		NodePtr current = map->buckets[idx];
