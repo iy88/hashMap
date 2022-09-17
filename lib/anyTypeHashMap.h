@@ -4,38 +4,35 @@
 #include <stdlib.h>
 #define MAX_TABLE_LENGTH 50
 #include <string.h>
-typedef struct n {
-	const char * key;
-	unsigned long long size;
+typedef struct m_n {
+	char* key;
 	void* value;
-	struct n* next;
-} Node;
-
-//typedef Node** hashMap;
+	struct m_n* next;
+} map_node;
 
 typedef struct {
 	unsigned long long size;
-	Node** buckets;
+	map_node** buckets;
 } hashMap;
 
-typedef Node* NodePtr;
+typedef map_node* map_node_ptr;
 
 typedef hashMap* hashMapPtr;
 
-int hash(const char * key);
+int hash(char* key);
 
 hashMapPtr createHashMap();
 
-int mapSet(const hashMapPtr map, const char * key, void* value, int size);
+int mapSet(hashMapPtr map, char* key, void* value, int size);
 
-void* mapGet(const hashMapPtr map, const char * key);
+void* mapGet(hashMapPtr map, char* key);
 
-int mapDelete(const hashMapPtr map, const char * key);
+int mapDelete(hashMapPtr map, char* key);
 
-void mapClean(const hashMapPtr map);
+void mapClean(hashMapPtr map);
 
-int mapHas(const hashMapPtr map, const char * key);
+int mapHas(hashMapPtr map, char* key);
 
-void mapDestory(const hashMapPtr);
+void mapDestory(hashMapPtr);
 
 #endif
