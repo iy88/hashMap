@@ -6,6 +6,7 @@
 #include <string.h>
 typedef struct n {
 	const char * key;
+	unsigned long long size;
 	void* value;
 	struct n* next;
 } Node;
@@ -27,7 +28,7 @@ hashMapPtr createHashMap();
 
 int mapSet(const hashMapPtr map, const char * key, void* value, int size);
 
-int mapGet(const hashMapPtr map, const char * key, void** dst);
+void* mapGet(const hashMapPtr map, const char * key);
 
 int mapDelete(const hashMapPtr map, const char * key);
 

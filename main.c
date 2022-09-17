@@ -21,8 +21,7 @@ int main()
 	printf("map size: %d\n", myMap->size);
 	printf("has 'a': %d\n", mapHas(myMap, "a"));
 	mapSet(myMap, "a", "b", 2);
-	char** a = malloc(sizeof(char *));
-	mapGet(myMap, "a", a);
+	char *a = mapGet(myMap, "a", a);
 	printf("%s\n", *a);
 	mapClean(myMap);
 	printf("map size: %d\n", myMap->size);

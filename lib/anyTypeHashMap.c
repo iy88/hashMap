@@ -142,23 +142,22 @@ int mapSet(const hashMapPtr map, const char* key, const void* value, int size) {
 }
 
 
-int mapGet(const hashMapPtr map, const char* key, void** dst) {
+void* mapGet(const hashMapPtr map, const char* key) {
 	int idx = hash(key);
 	if (map->buckets[idx] != 0) {
 		NodePtr current = map->buckets[idx];
 		while (isEqual(current->key, key) != 1) {
 			if (current->next == NULL) {
-				return 0;
+				return NULL;
 			}
 			else {
 				current = current->next;
 			}
 		}
-		*dst = current->value;
-		return 1;
+		return current->value;
 	}
 	else {
-		return 0;
+		return NULL;
 	}
 }
 
@@ -168,6 +167,7 @@ int mapDelete(const hashMapPtr map, const char* key) {
 		NodePtr current = map->buckets[idx];
 		if (isEqual(current->key, key) == 1) {
 			if (current->next == NULL) {
+				free(current->value);
 				free(current);
 				map->buckets[idx] = NULL;
 				map->size--;
@@ -176,6 +176,7 @@ int mapDelete(const hashMapPtr map, const char* key) {
 			else {
 				NodePtr tmp = current;
 				map->buckets[idx] = current->next;
+				free(tmp->value);
 				free(tmp);
 				map->size--;
 				return 1;
@@ -192,11 +193,13 @@ int mapDelete(const hashMapPtr map, const char* key) {
 		if (current->next->next) {
 			NodePtr tmp = current->next;
 			current->next = current->next->next;
+			free(tmp->value);
 			free(tmp);
 			map->size--;
 			return 1;
 		}
 		else {
+			free(current->next->value);
 			free(current->next);
 			current->next = NULL;
 			map->size--;
@@ -214,6 +217,7 @@ void mapClean(const hashMapPtr map) {
 			NodePtr current = map->buckets[i];
 			while (current->next) {
 				NodePtr tmp = current->next;
+				free(current->value);
 				free(current);
 				current = tmp;
 			}
